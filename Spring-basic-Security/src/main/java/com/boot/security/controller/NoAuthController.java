@@ -10,6 +10,6 @@ public class NoAuthController {
 
     @GetMapping("/hello")
     public String sayHello() {
-        return "hi with noAuth";
+        return "hi end point is not secure";
     }
 }

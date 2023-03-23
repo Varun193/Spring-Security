@@ -1,17 +1,24 @@
 package com.boot.security.config;
 
+import com.boot.security.service.UserInfoUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.WebSecurityConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
+@EnableMethodSecurity
 public class SpringSecurityConfig {
 
     //default spring security
@@ -36,37 +43,41 @@ public class SpringSecurityConfig {
 //    }
 
     //Role based Security
-
-        @Bean
+    @Bean
     public SecurityFilterChain customFilterChain(HttpSecurity http) throws Exception {
         http
+                .csrf().disable()
+                .authorizeRequests()
+                .antMatchers("/noAuth/**","/user/new").permitAll()
+                .and()
                 .authorizeRequests()
                 .antMatchers("/rest/**")
-                .hasAnyRole("USER")
-                .anyRequest()
+//                .hasAnyRole("ADMIN")
+//                .anyRequest()
                 .fullyAuthenticated().and().httpBasic();
         return http.build();
     }
 
 
-    //In-Memory Authentication
+    // Create User details Using UserDetailsService(provided by spring-security) interface and store in
+    //InMemoryUserDetailsManager
     @Bean
-    public InMemoryUserDetailsManager UserDetailsService() {
-        UserDetails user = User.withDefaultPasswordEncoder()
-                .username("varun")
-                .password("12345")
-                .roles("USER")
-                .build();
-        return new InMemoryUserDetailsManager(user);
+    public UserDetailsService userDetails(PasswordEncoder pwdEncoder) {
+    //        UserDetails admin = User.withUsername("Meghana")
+    //                .password(pwdEncoder.encode("54321"))
+    //                .roles("ADMIN")
+    //                .build();
+    //        UserDetails user = User.withUsername("Varun")
+    //                .password(pwdEncoder.encode("12345"))
+    //                .roles("USER")
+    //                .build();
+    //        return new InMemoryUserDetailsManager(admin,user);
+        return new UserInfoUserDetailsService();
     }
-//    @Bean
-//    public InMemoryUserDetailsManager UserDetailsService1() {
-//        UserDetails user1 = User.withDefaultPasswordEncoder()
-//                .username("megha")
-//                .password("54321")
-//                .roles("ADMIN")
-//                .build();
-//        return new InMemoryUserDetailsManager(user1);
-//    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
 }
